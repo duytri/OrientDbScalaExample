@@ -1,4 +1,4 @@
-# OrientDbSample
+# OrientDB Scala Example
 This repo contains a script for starting to use OrientDB with Scala language. 
 
 ## Requirements
