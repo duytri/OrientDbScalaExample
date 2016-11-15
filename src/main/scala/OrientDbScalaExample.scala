@@ -1,9 +1,12 @@
+package main.scala
+
 import com.orientechnologies.orient.core.metadata.schema.OType
 import com.orientechnologies.orient.core.sql.OCommandSQL
 import com.tinkerpop.blueprints.{ Direction, Edge, Vertex }
 import com.tinkerpop.blueprints.impls.orient._
 
 import scala.collection.JavaConversions._
+import scala.collection.immutable.HashSet
 
 object OrientDbScalaExample {
   def main(args: Array[String]): Unit = {
@@ -11,7 +14,7 @@ object OrientDbScalaExample {
     val WorkEdgeLabel = "Work"
 
     // opens the DB (if not existing, it will create it)
-    val uri: String = "plocal:/home/duytri/orientdb/databases/scala_sample"
+    val uri: String = "plocal:/home/nguyenduy/orientdb/databases/scala_sample"
     val factory: OrientGraphFactory = new OrientGraphFactory(uri)
     val graph: OrientGraph = factory.getTx()
 
@@ -39,11 +42,14 @@ object OrientDbScalaExample {
         work.createProperty("startDate", OType.DATE)
         work.createProperty("endDate", OType.DATE)
         work.createProperty("projects", OType.LINKSET)
-      } else {
 
+        graph.commit()
+
+      } else {
         // cleans up the DB since it was already created in a preceding run
         graph.command(new OCommandSQL("DELETE VERTEX V")).execute()
         graph.command(new OCommandSQL("DELETE EDGE E")).execute()
+        graph.commit()
       }
 
       // adds some people
@@ -52,27 +58,36 @@ object OrientDbScalaExample {
       val johnDoe: Vertex = graph.addVertex("class:Person", Nil: _*)
       johnDoe.setProperty("firstName", "John")
       johnDoe.setProperty("lastName", "Doe")
+      graph.commit()
 
       // we can also set properties directly in the constructor call
       val johnSmith: Vertex = graph.addVertex("class:Person", "firstName", "John", "lastName", "Smith")
       val janeDoe: Vertex = graph.addVertex("class:Person", "firstName", "Jane", "lastName", "Doe")
+      graph.commit()
 
       // creates a Company
       val acme: Vertex = graph.addVertex("class:Company", "name", "ACME", "revenue", "10000000")
+      graph.commit()
 
       // creates a couple of projects
       val acmeGlue: Vertex = graph.addVertex("class:Project", "name", "ACME Glue")
       val acmeRocket: Vertex = graph.addVertex("class:Project", "name", "ACME Rocket")
+      graph.commit()
 
       // creates edge JohnDoe worked for ACME
       val johnDoeAcme: Edge = graph.addEdge(null, johnDoe, acme, WorkEdgeLabel)
       johnDoeAcme.setProperty("startDate", "2010-01-01")
       johnDoeAcme.setProperty("endDate", "2013-04-21")
-      johnDoeAcme.setProperty("projects", Set(acmeGlue, acmeRocket))
+      var hsProjs = new HashSet[Vertex]()
+      hsProjs.add(acmeGlue) 
+      hsProjs.add(acmeRocket)
+      johnDoeAcme.setProperty("projects", hsProjs)
+      graph.commit()
 
       // another way to create an edge, starting from the source vertex
       val johnSmithAcme: Edge = johnSmith.addEdge(WorkEdgeLabel, acme)
       johnSmithAcme.setProperty("startDate", "2009-01-01")
+      graph.commit()
 
       // prints all the people who works/worked for ACME
       val res: OrientDynaElementIterable = graph
@@ -106,6 +121,12 @@ object OrientDbScalaExample {
           s"${person.getProperty("firstName")} " +
           s"[${status}]. Worked on: ${projects}.")
       })
+    } catch {
+      case t: Throwable => {
+        println("************************ ERROR ************************")
+        t.printStackTrace() // TODO: handle error
+        println("************************ ERROR ************************")
+      }
     } finally {
       graph.shutdown()
       factory.close()
