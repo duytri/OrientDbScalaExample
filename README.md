@@ -8,7 +8,7 @@ This repo contains a script for starting to use OrientDB with Scala language.
 
 ## Usage
  This demo creates a small graph database containing three people and one company:
-![Graph screenshot](/src/main/resources/graph_screenshot.png?raw=true "Graph's screenshot") 
+![Graph screenshot](https://github.com/andreaiacono/OrientDbScalaExample/blob/master/src/main/resources/graph_screenshot.png?raw=true?raw=true "Graph's screenshot") 
 
 There's only one Scala file that contains the basic steps for interacting with an OrientDB database.
 The steps are:
