@@ -1,10 +1,12 @@
 # OrientDB Scala Example
+Based on [OrientDbScalaExample](https://github.com/andreaiacono/OrientDbScalaExample) repository of Andrea Iacono.
 This repo contains a script for starting to use OrientDB with Scala language. 
 
 ## Requirements
 
 * [SBT](http://www.scala-sbt.org/)
 * Java 8
+* OrientDB 2.2.12
 
 ## Usage
  This demo creates a small graph database containing three people and one company:

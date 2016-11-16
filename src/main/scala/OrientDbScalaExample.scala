@@ -5,8 +5,8 @@ import com.orientechnologies.orient.core.sql.OCommandSQL
 import com.tinkerpop.blueprints.{ Direction, Edge, Vertex }
 import com.tinkerpop.blueprints.impls.orient._
 
-import scala.collection.JavaConversions._
-import scala.collection.immutable.HashSet
+import java.util.HashSet
+import java.lang.Iterable
 
 object OrientDbScalaExample {
   def main(args: Array[String]): Unit = {
@@ -14,7 +14,7 @@ object OrientDbScalaExample {
     val WorkEdgeLabel = "Work"
 
     // opens the DB (if not existing, it will create it)
-    val uri: String = "plocal:/home/nguyenduy/orientdb/databases/scala_sample"
+    val uri: String = "plocal:/home/duytri/orientdb/databases/scala_sample"
     val factory: OrientGraphFactory = new OrientGraphFactory(uri)
     val graph: OrientGraph = factory.getTx()
 
@@ -79,7 +79,7 @@ object OrientDbScalaExample {
       johnDoeAcme.setProperty("startDate", "2010-01-01")
       johnDoeAcme.setProperty("endDate", "2013-04-21")
       var hsProjs = new HashSet[Vertex]()
-      hsProjs.add(acmeGlue) 
+      hsProjs.add(acmeGlue)
       hsProjs.add(acmeRocket)
       johnDoeAcme.setProperty("projects", hsProjs)
       graph.commit()
@@ -90,41 +90,42 @@ object OrientDbScalaExample {
       graph.commit()
 
       // prints all the people who works/worked for ACME
-      val res: OrientDynaElementIterable = graph
+      val res: Iterable[OrientVertex] = graph
         .command(new OCommandSQL(s"SELECT expand(in('${WorkEdgeLabel}')) FROM Company WHERE name='ACME'"))
         .execute()
 
       println("ACME people:")
-      res.foreach(v => {
-
-        // gets the person
-        val person: OrientVertex = v.asInstanceOf[OrientVertex]
-
-        // gets the "Work" edge
+      val result = res.iterator()
+      while (result.hasNext()) {
+        val person = result.next()
         val workEdgeIterator = person.getEdges(Direction.OUT, WorkEdgeLabel).iterator()
         val edge = workEdgeIterator.next()
 
         // retrieves worker's info
         val status = if (edge.getProperty("endDate") != null) "retired" else "active"
-        val projects =
-          if (edge.getProperty("projects") != null)
-            edge
-              .getProperty("projects")
-              .asInstanceOf[Set[Vertex]]
-              .map(v => v.getProperty[String]("name"))
-              .mkString(", ")
-          else
-            "Any project"
+
+        val iterVertex: Iterable[Vertex] = edge.getProperty("projects")
+
+        var projects = ""
+        if (iterVertex != null) {
+          val setVertex = iterVertex.iterator();
+          while (setVertex.hasNext()) {
+            val vertex = setVertex.next()
+            projects += vertex.getProperty("name").toString() + ", ";
+          }
+          projects = projects.substring(0, projects.length() - 2);
+        } else
+          projects = "Any project"
 
         // and prints them
-        println(s"Name: ${person.getProperty("lastName")}, " +
-          s"${person.getProperty("firstName")} " +
-          s"[${status}]. Worked on: ${projects}.")
-      })
+        System.out.println("Name: " + person.getProperty("lastName") + " " + person.getProperty("firstName")
+          + ", " + status + ", Worked on: " + projects + ".")
+      }
     } catch {
       case t: Throwable => {
         println("************************ ERROR ************************")
         t.printStackTrace() // TODO: handle error
+        println()
         println("************************ ERROR ************************")
       }
     } finally {
