@@ -14,7 +14,7 @@ object OrientDbScalaExample {
     val WorkEdgeLabel = "Work"
 
     // opens the DB (if not existing, it will create it)
-    val uri: String = "plocal:/home/duytri/orientdb/databases/scala_sample"
+    val uri: String = "plocal:/home/nguyenduy/orientdb/databases/scala_sample"
     val factory: OrientGraphFactory = new OrientGraphFactory(uri)
     val graph: OrientGraph = factory.getTx()
 
